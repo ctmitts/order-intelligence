@@ -1,0 +1,9 @@
+# Pin a designed light theme so the app looks the same for every viewer,
+# regardless of their OS/Streamlit dark-mode setting.
+[theme]
+base = "light"
+primaryColor = "#2f6b5e"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#eef1ef"
+textColor = "#1f2a27"
+font = "sans serif"

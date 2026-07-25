@@ -1,0 +1,33 @@
+# Secrets
+.env
+*.env
+!.env.example
+
+# Real (un-anonymized) source data + the real->fake mapping — never commit
+data/orders_raw.csv
+data/*_raw.csv
+data/anon_mapping_private.csv
+*.numbers
+
+# Vector database (rebuild from data/orders.csv)
+chroma_db/
+app/chroma_db/
+
+# Large binaries / scans
+*.pdf
+*.tar
+*.zip
+# ...but keep the synthetic sample order form for testing
+!samples/*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

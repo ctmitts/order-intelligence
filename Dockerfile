@@ -1,8 +1,9 @@
 FROM python:3.11-slim
 
-# System deps for PyMuPDF / pdf2image
+# libgomp1 for onnxruntime (ChromaDB embeddings); pypdfium2 bundles its own
+# PDF engine, so no system PDF library is needed.
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    poppler-utils libgomp1 \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

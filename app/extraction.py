@@ -1,4 +1,4 @@
-import fitz  # PyMuPDF
+import pypdfium2 as pdfium  # permissive (BSD/Apache) PDF text + rendering
 import base64
 import pandas as pd
 from anthropic import Anthropic
@@ -114,40 +114,39 @@ Return ONLY the JSON array, no other text.
         return keyword_count >= 3 or (keyword_count >= 2 and (has_currency or has_date or has_email))
 
     def extract_text_from_page(self, pdf_path, page_num):
-        """Extract text from PDF page using PyMuPDF"""
+        """Extract text from a PDF page (pypdfium2)."""
+        pdf = None
         try:
-            doc = fitz.open(pdf_path)
-            page = doc[page_num]
-            text_content = page.get_text().strip()
-            doc.close()
+            pdf = pdfium.PdfDocument(pdf_path)
+            textpage = pdf[page_num].get_textpage()
+            text_content = textpage.get_text_range().strip()
             return text_content
         except Exception as e:
             print(f"Error extracting text from page {page_num + 1}: {e}")
             return ""
+        finally:
+            if pdf is not None:
+                pdf.close()
 
     def pdf_page_to_image(self, pdf_path, page_num):
-        """Convert specific PDF page to PIL Image using PyMuPDF with enhanced quality"""
+        """Render a PDF page to an enhanced PIL Image for OCR (pypdfium2)."""
+        pdf = None
         try:
-            doc = fitz.open(pdf_path)
-            page = doc[page_num]
-            
-            # Convert to image with higher DPI for better OCR accuracy
-            # 3x scale = ~225 DPI (better for text recognition)
-            pix = page.get_pixmap(matrix=fitz.Matrix(3, 3))
-            img_data = pix.tobytes("png")
-            
-            # Convert to PIL Image
-            image = Image.open(io.BytesIO(img_data))
-            doc.close()
-            
+            pdf = pdfium.PdfDocument(pdf_path)
+            # scale=3 ≈ 216 DPI — higher resolution improves text recognition.
+            bitmap = pdf[page_num].render(scale=3)
+            image = bitmap.to_pil().convert("RGB")
+
             # Apply image enhancements for better OCR
             image = self._enhance_image_for_ocr(image)
-            
+
             return image
-            
         except Exception as e:
             print(f"Error converting page {page_num + 1} to image: {e}")
             return None
+        finally:
+            if pdf is not None:
+                pdf.close()
     
     def _enhance_image_for_ocr(self, image):
         """Apply image enhancements to improve OCR accuracy"""
@@ -412,8 +411,8 @@ Return ONLY this JSON with corrected values:
         print(f"Processing PDF: {pdf_path}")
         
         try:
-            # Get page count using PyMuPDF
-            doc = fitz.open(pdf_path)
+            # Get page count
+            doc = pdfium.PdfDocument(pdf_path)
             total_pages = len(doc)
             doc.close()
             

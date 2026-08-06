@@ -24,7 +24,7 @@ A small member-based collective took orders on **paper forms**, scanned in bulk 
 ```mermaid
 flowchart LR
     A[Scanned order PDFs] --> B[Extraction pipeline]
-    B -->|PyMuPDF text| C{Enough text?}
+    B -->|extract text| C{Enough text?}
     C -->|yes| D[Claude: text extraction]
     C -->|no| E[Render page image]
     E --> F[Claude Vision: image extraction]
@@ -41,7 +41,7 @@ flowchart LR
 
 Each page is processed with a **hybrid strategy** (`app/extraction.py`):
 
-1. **Text first.** PyMuPDF pulls any embedded text. A heuristic decides whether it's rich enough (keyword density, presence of currency/dates/emails) to extract from directly.
+1. **Text first.** The pipeline pulls any embedded text (via pypdfium2). A heuristic decides whether it's rich enough (keyword density, presence of currency/dates/emails) to extract from directly.
 2. **Vision fallback.** If the text is thin — the common case for photographed/scanned forms — the page is rendered to a high-DPI image, sharpened, and sent to **Claude** as an image with a strict JSON schema.
 3. **Second-pass verification.** Customer name and shipping address (the highest-cost fields to get wrong) are re-checked against the image in a focused follow-up call.
 
@@ -117,7 +117,11 @@ Dockerfile
 
 ## Tech stack
 
-Claude API (vision + text extraction) · ChromaDB · Streamlit · Plotly · PyMuPDF · pandas
+Claude API (vision + text extraction) · ChromaDB · Streamlit · Plotly · pypdfium2 · pandas
+
+## License
+
+MIT — see [LICENSE](LICENSE). All PDF handling uses [pypdfium2](https://github.com/pypdfium2-team/pypdfium2) (BSD-3/Apache-2.0) and [reportlab](https://www.reportlab.com/) (BSD), so the project carries no copyleft dependencies.
 
 ---
 

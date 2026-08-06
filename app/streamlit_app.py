@@ -316,13 +316,13 @@ def page_live():
             )
             return
         from extraction import HybridPackingSlipExtractor
-        import fitz
+        import pypdfium2 as pdfium
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(up.getvalue())
             path = tmp.name
         try:
-            doc = fitz.open(path)
+            doc = pdfium.PdfDocument(path)
             n = len(doc)
             doc.close()
             extractor = HybridPackingSlipExtractor()

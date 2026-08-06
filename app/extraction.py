@@ -211,9 +211,28 @@ Return ONLY this JSON with corrected values:
   "Shipping_Zip": "10001"
 }}"""
 
+            # Constrain the response to a strict JSON schema so the model can't
+            # preamble its way past the token budget (Opus narrates by default;
+            # structured outputs guarantee the first text block is valid JSON).
+            _verify_fields = [
+                "Customer_Name", "Email", "Shipping_Address_Line1",
+                "Shipping_Address_Line2", "Shipping_City", "Shipping_State",
+                "Shipping_Zip",
+            ]
             message = self.client.messages.create(
                 model="claude-opus-4-8",
-                max_tokens=200,
+                max_tokens=400,
+                output_config={
+                    "format": {
+                        "type": "json_schema",
+                        "schema": {
+                            "type": "object",
+                            "properties": {f: {"type": "string"} for f in _verify_fields},
+                            "required": _verify_fields,
+                            "additionalProperties": False,
+                        },
+                    }
+                },
                 messages=[
                     {
                         "role": "user",

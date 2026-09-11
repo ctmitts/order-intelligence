@@ -220,7 +220,7 @@ Return ONLY this JSON with corrected values:
                 "Shipping_Zip",
             ]
             message = self.client.messages.create(
-                model="claude-opus-4-8",
+                model="claude-opus-5",
                 max_tokens=400,
                 output_config={
                     "format": {
@@ -254,7 +254,7 @@ Return ONLY this JSON with corrected values:
                 ]
             )
             
-            response_text = message.content[0].text.strip()
+            response_text = next(b.text for b in message.content if b.type == "text").strip()
             
             # Parse the JSON response
             import json
@@ -318,8 +318,7 @@ Return ONLY this JSON with corrected values:
         """Extract data from text using Claude API"""
         try:
             message = self.client.messages.create(
-                #model="claude-sonnet-4-20250514",
-                model="claude-opus-4-8",
+                model="claude-opus-5",
                 max_tokens=4000,
                 messages=[
                     {
@@ -329,7 +328,7 @@ Return ONLY this JSON with corrected values:
                 ]
             )
             
-            response_text = message.content[0].text.strip()
+            response_text = next(b.text for b in message.content if b.type == "text").strip()
             
             try:
                 data = json.loads(response_text)
@@ -352,8 +351,7 @@ Return ONLY this JSON with corrected values:
             base64_image = self.image_to_base64(image)
             
             message = self.client.messages.create(
-                #model="claude-sonnet-4-20250514",
-                model="claude-opus-4-8",
+                model="claude-opus-5",
                 max_tokens=4000,
                 messages=[
                     {
@@ -376,7 +374,7 @@ Return ONLY this JSON with corrected values:
                 ]
             )
             
-            response_text = message.content[0].text.strip()
+            response_text = next(b.text for b in message.content if b.type == "text").strip()
             
             try:
                 data = json.loads(response_text)

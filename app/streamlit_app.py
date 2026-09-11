@@ -308,37 +308,66 @@ def page_live():
             "and explore the other tabs."
         )
     up = st.file_uploader("Order form PDF", type=["pdf"])
-    if up and st.button("🚀 Extract with Claude", type="primary"):
+    if not up:
+        return
+
+    import pypdfium2 as pdfium
+
+    # Write once, read the page count so the range control reflects the real file.
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+        tmp.write(up.getvalue())
+        path = tmp.name
+    try:
+        try:
+            doc = pdfium.PdfDocument(path)
+            n_pages = len(doc)
+            doc.close()
+        except Exception as e:
+            st.error(f"Couldn't read that PDF: {e}")
+            return
+
+        st.caption(f"📄 **{up.name}** — {n_pages} page{'s' if n_pages != 1 else ''}")
+        c1, c2 = st.columns(2)
+        start = int(c1.number_input("First page", min_value=1, max_value=n_pages, value=1))
+        end = int(c2.number_input("Last page", min_value=start, max_value=n_pages, value=n_pages))
+        count = end - start + 1
+        st.caption(f"Claude reads each page (one or two calls per page). Selected: {count} page{'s' if count != 1 else ''}.")
+
+        if not st.button(f"🚀 Extract {count} page{'s' if count != 1 else ''} with Claude", type="primary"):
+            return
         if not os.getenv("ANTHROPIC_API_KEY"):
             st.error(
                 "No ANTHROPIC_API_KEY found. Add it to `.env` in the project root, "
                 "then restart the app (Ctrl+C and `make run`)."
             )
             return
-        from extraction import HybridPackingSlipExtractor
-        import pypdfium2 as pdfium
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            tmp.write(up.getvalue())
-            path = tmp.name
-        try:
-            doc = pdfium.PdfDocument(path)
-            n = len(doc)
-            doc.close()
-            extractor = HybridPackingSlipExtractor()
-            with st.spinner(f"Reading {min(n,3)} page(s) with Claude…"):
-                records = []
-                for p in range(min(n, 3)):  # cap for demo cost/latency
-                    records.extend(extractor.extract_page_data(path, p, up.name) or [])
+        from extraction import HybridPackingSlipExtractor
+        extractor = HybridPackingSlipExtractor()
+
+        progress = st.progress(0.0)
+        status = st.empty()
+        table = st.empty()
+        records = []
+        failures = 0
+        for i, p in enumerate(range(start - 1, end)):
+            status.write(f"Reading page {p + 1} of {end}…")
+            try:
+                records.extend(extractor.extract_page_data(path, p, up.name) or [])
+            except Exception as e:  # one bad page shouldn't kill the run
+                failures += 1
+                st.warning(f"Page {p + 1} failed: {e}")
+            progress.progress((i + 1) / count)
             if records:
-                st.success(f"Extracted {len(records)} line item(s).")
-                st.dataframe(pd.DataFrame(records), width="stretch")
-            else:
-                st.error("No structured data found on the first pages.")
-        except Exception as e:
-            st.error(f"Extraction failed: {e}")
-        finally:
-            os.unlink(path)
+                table.dataframe(pd.DataFrame(records), width="stretch")
+
+        note = f" ({failures} page{'s' if failures != 1 else ''} failed)" if failures else ""
+        if records:
+            status.success(f"Extracted {len(records)} line item(s) from {count} page{'s' if count != 1 else ''}{note}.")
+        else:
+            status.info(f"No structured order data found in pages {start}–{end}{note}.")
+    finally:
+        os.unlink(path)
 
 
 def page_about():

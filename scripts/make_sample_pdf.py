@@ -30,7 +30,7 @@ LINE = (0.85, 0.87, 0.86)
 ORDERS = [
     {
         "number": "4821", "date": "06/12/2024", "ship_date": "06/14/2024",
-        "name": "Nova Sinclair", "email": "nova.sinclair482@gmail.com",
+        "name": "John Smith", "email": "john.smith@example.com",
         "addr1": "1420 Cedar Ave", "city": "Portland", "state": "OR", "zip": "97214",
         "lines": [
             ("GUMM-3", "Botanical Gummies - 3-Pack", 1, 64.99),
@@ -40,7 +40,7 @@ ORDERS = [
     },
     {
         "number": "4907", "date": "06/13/2024", "ship_date": "06/15/2024",
-        "name": "Julian Okafor", "email": "julian.okafor137@proton.me",
+        "name": "Julian Okafor", "email": "julian.okafor@example.com",
         "addr1": "88 Marlowe St", "city": "Austin", "state": "TX", "zip": "78702",
         "lines": [
             ("CARM-5", "Signature Caramels - 5-Pack", 1, 149.99),
